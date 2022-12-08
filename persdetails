@@ -1,0 +1,148 @@
+#pojo
+--------------------------------------------------------
+package com.citiustech.personApp.model;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "person_data")
+public class Person {
+	
+	private long id;
+	private String first_name;
+	private String last_name;
+	
+	public Person() {
+	}
+
+	public Person(long id, String first_name, String last_name) {
+		this.id = id;
+		this.first_name = first_name;
+		this.last_name = last_name;
+	}
+
+	@Id
+	@Column(name="id", nullable=false)
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	@Column(name="first_name", nullable=false)
+	public String getFirst_name() {
+		return first_name;
+	}
+
+	public void setFirst_name(String first_name) {
+		this.first_name = first_name;
+	}
+
+	@Column(name="last_name", nullable=false)
+	public String getLast_name() {
+		return last_name;
+	}
+
+	public void setLast_name(String last_name) {
+		this.last_name = last_name;
+	}
+	
+	
+	@Override
+	public String toString() {
+		return "Person [id=" + id + ", first_name=" + first_name + ", last_name=" + last_name + "]";
+	}
+
+	public String abc(){
+		return this.first_name+" "+this.last_name;
+	}
+	
+}
+
+------------------------------------
+service
+-----------------------------------
+package com.citiustech.personApp.service;
+import java.util.Collection;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.citiustech.personApp.model.Person;
+
+@Service
+public class PersonService {
+	
+	@Autowired
+	private SessionFactory sessionFactory;
+	
+	public Collection<Person> findAll(){
+		Session session = sessionFactory.openSession();
+		
+		Query query = session.createQuery("FROM Person");
+		Collection<Person> persons = query.list();
+		
+		System.out.println(persons);
+		
+		for (Person person : persons) {
+			System.out.println(person.abc());
+		}
+		
+		session.close();
+		return persons;
+	}
+	
+	
+	public void savePerson(Person person){
+		Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		
+		session.save(person);
+		
+		tx.commit();
+		session.close();
+		
+	}
+}
+-------------------------------------------------------
+control
+-------------------------------------------------------
+package com.citiustech.personApp.controller;
+
+import java.util.Collection;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.citiustech.personApp.model.Person;
+import com.citiustech.personApp.service.PersonService;
+
+@RestController
+@RequestMapping("/person")
+public class PersonController {
+	
+	@Autowired
+	private PersonService personService;
+	
+	@GetMapping(value="getAll")
+	public Collection<Person> getAllPerson(){
+		return personService.findAll();
+	}
+	
+	@PostMapping(value="save")
+	public void savePerson(Person person){
+		personService.savePerson(person);
+	}
+}
+
+
