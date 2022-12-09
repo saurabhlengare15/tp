@@ -1,0 +1,153 @@
+#pojo
+----------------------------
+package com.citiustech.todoList.model;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table
+public class TodoList {
+	
+	private long id;
+	private String description;
+	private long priority;
+	
+	public TodoList() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public TodoList(long id, String description, long priority) {
+		this.id = id;
+		this.description = description;
+		this.priority = priority;
+	}
+
+	@Id
+	@Column(nullable=false)
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	@Column(nullable=false, length=200)
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public long getPriority() {
+		return priority;
+	}
+
+	public void setPriority(long priority) {
+		this.priority = priority;
+	}
+
+	@Override
+	public String toString() {
+		return "TodoList [id=" + id + ", description=" + description + ", priority=" + priority + "]";
+	}
+	
+}
+---------------------------------------------
+service
+---------------------------------------------
+package com.citiustech.todoList.service;
+
+import java.util.Collection;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.citiustech.todoList.model.TodoList;
+
+@Service
+public class TodoListService {
+	
+	@Autowired
+	private SessionFactory sessionFactory;
+	
+	public Collection<TodoList> getAll(){
+		Session session = sessionFactory.openSession();
+		Query query = session.createQuery("from TodoList");
+		Collection<TodoList> todos = query.list();
+		session.close();
+		return todos;
+	}
+	
+	public void saveTodo(TodoList todoList){
+		Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		session.save(todoList);
+		tx.commit();
+		session.close();
+	}
+	
+	public void updateTodo(TodoList todoList){
+		Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		session.update(todoList);
+		tx.commit();
+		session.close();
+	}
+}
+---------------------------------------------
+contlr
+--------------------------------------------
+package com.citiustech.todoList.controller;
+
+import java.util.Collection;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.citiustech.todoList.model.TodoList;
+import com.citiustech.todoList.service.TodoListService;
+
+@RestController
+@RequestMapping("todo")
+public class TodoListController {
+	
+	@Autowired
+	private TodoListService todoListService;
+	
+	@GetMapping
+	public String getString(){
+		return "hello";
+	}
+	
+	@GetMapping(value="getAll")
+	public Collection<TodoList> getAll(){
+		return todoListService.getAll();
+	}
+	
+	@PostMapping(value="save")
+	public void saveTodo(@RequestBody TodoList todoList){
+		todoListService.saveTodo(todoList);
+	}
+	
+	@PutMapping(value="update/{id}")
+	public void updateTodo(@PathVariable int id, @RequestBody TodoList todoList){
+		todoListService.updateTodo(todoList);
+	}
+}
+
